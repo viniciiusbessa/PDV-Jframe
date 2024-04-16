@@ -20,7 +20,7 @@ public class ClienteDAO {
     static String login = "root";
     static String senha = "admin";
     
-    public static boolean salvar(Cliente obj) {
+    public static boolean alterar(Cliente obj) {
         Connection conexao = null;
         
         boolean retorno = false;
@@ -35,13 +35,16 @@ public class ClienteDAO {
             
             // 3.Preparar comando SQL
             PreparedStatement instrucaoSQL = conexao.prepareStatement(
-                  "INSERT INTO cliente (nomeCliente, cpf, emailCliente) VALUES (?, ?, ?)"  
+                  "UPDATE cliente SET nomeCliente=?, emailCliente=? WHERE idCliente = ?;"
             );
                     
            instrucaoSQL.setString(1, obj.getNomeCliente());
-           instrucaoSQL.setString(2, obj.getCPF());
-           instrucaoSQL.setString(3, obj.getEmailCliente()); 
-           
+           instrucaoSQL.setString(2, obj.getEmailCliente()); 
+           instrucaoSQL.setInt(3, obj.getIdCliente());
+           instrucaoSQL.setString(4, obj.getRuaCliente());
+           instrucaoSQL.setString(5, obj.getCidadeCliente());
+           instrucaoSQL.setString(6, obj.getNumeroCliente());
+ 
            // 4.Executar comando
            int linhasAfetadas = instrucaoSQL.executeUpdate();
            
@@ -98,8 +101,11 @@ public class ClienteDAO {
                     String nome = rs.getString("nomeCliente");
                     String CPF = rs.getString("CPF");
                     String email = rs.getString("emailCliente");
-                    
-                    Cliente item = new Cliente(id, nome, email, CPF);
+                    String rua = rs.getString("ruaCliente");
+                    String cidade = rs.getString("cidadeCliente");
+                    String numero = rs.getString("numeroCliente");
+           
+                    Cliente item = new Cliente(id, nome, email, CPF, rua, cidade, numero);
                     listaRetorno.add(item);                  
                 }
                 
@@ -130,4 +136,100 @@ public class ClienteDAO {
         return listaRetorno;
     }
     
-}
+     public static boolean salvar(Cliente obj) {
+        Connection conexao = null; 
+        boolean retorno = false;
+        
+        try {
+            
+            // 1.Carregar o driver do mysql      
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            
+            // 2.Fazer conexão com o banco 
+            conexao = DriverManager.getConnection(URL, login, senha);
+            
+            // 3.Preparar comando SQL
+            PreparedStatement instrucaoSQL = conexao.prepareStatement(
+                  "INSERT INTO cliente (nomeCliente, cpf, emailCliente, ruaCliente, cidadeCliente, numeroCliente) VALUES(?,?,?,?,?,?)"
+            );
+                    
+           instrucaoSQL.setString(1, obj.getNomeCliente());
+           instrucaoSQL.setString(2, obj.getCPF()); 
+           instrucaoSQL.setString(3, obj.getEmailCliente());
+           instrucaoSQL.setString(4, obj.getRuaCliente());
+           instrucaoSQL.setString(5, obj.getCidadeCliente());
+           instrucaoSQL.setString(6, obj.getNumeroCliente());
+      
+           // 4.Executar comando
+           int linhasAfetadas = instrucaoSQL.executeUpdate();
+           
+           if (linhasAfetadas > 0){
+               retorno = true;
+           }
+                      
+            // Conexao com banco
+        
+        } catch(ClassNotFoundException e) {
+            System.out.println("Driver não encontrado");
+            
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        } finally {
+          if(conexao!=null) {
+              try {
+                  conexao.close();
+              } catch (SQLException ex) {
+                  Logger.getLogger(ClienteDAO.class.getName()).log(Level.SEVERE, null, ex);
+              }
+          }  
+        
+        }
+        return retorno; 
+     }
+
+ public static boolean excluir(int idExcluir) {
+    Connection conexao = null;
+    boolean retorno = false;
+    
+    try {
+        // 1.Carregar o driver do mysql      
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        
+        // 2.Fazer conexão com o banco 
+        conexao = DriverManager.getConnection(URL, login, senha);
+        
+        // 3.Preparar comando SQL
+        PreparedStatement instrucaoSQL = conexao.prepareStatement(
+                "DELETE FROM Cliente WHERE idCliente = ?;"
+        );
+             
+        // Definir o parâmetro do ID a ser excluído
+        instrucaoSQL.setInt(1, idExcluir);
+     
+        // 4.Executar comando
+        int linhasAfetadas = instrucaoSQL.executeUpdate();
+       
+        if (linhasAfetadas > 0){
+            retorno = true;
+        } else {
+            System.out.println("Nenhum cliente foi excluído.");
+        }
+                      
+        // Conexao com banco
+        
+    } catch(ClassNotFoundException e) {
+        System.out.println("Driver não encontrado");
+        
+    } catch (Exception e) {
+        System.out.println(e.getMessage());
+    } finally {
+        if(conexao!=null) {
+            try {
+                conexao.close();
+            } catch (SQLException ex) {
+                Logger.getLogger(ClienteDAO.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }  
+    }  
+    return retorno;
+}}
